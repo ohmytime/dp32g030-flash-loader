@@ -1,6 +1,8 @@
-TARGET = dp32-fl
+TARGET = kd32-fl
 
-OBJS = $(TARGET).o
+# OBJS = $(TARGET).o
+OBJS = $(patsubst %.S,%.o,$(SRCS)) $(TARGET).o
+
 
 ifeq ($(OS),Windows_NT)
 TOP := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -14,11 +16,12 @@ LD = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 SIZE = arm-none-eabi-size
 
-ASFLAGS = -mcpu=cortex-m0
+SRCS += startup_kd32f328xb.S
+ASFLAGS = -mcpu=cortex-m0 -mthumb -g
 CFLAGS = -Os -Wall -Werror -mcpu=cortex-m0 -fno-builtin -fshort-enums -fno-delete-null-pointer-checks -std=c11 -MMD -fno-toplevel-reorder
 CFLAGS += -DPRINTF_INCLUDE_CONFIG_H
 CFLAGS += -DGIT_HASH=\"$(GIT_HASH)\"
-LDFLAGS = -mcpu=cortex-m0 -nostartfiles -Wl,-T,dp32-fl.ld -Wl,-x
+LDFLAGS = -mcpu=cortex-m0 -mthumb -Wl,--gc-sections -Wl,-Map=kd32-fl.map -T kd32-fl.ld
 
 INC =
 LIBS =
@@ -35,7 +38,7 @@ $(TARGET).elf: $(OBJS)
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
 
 %.o: %.S
-	$(AS) $(ASFLAGS) $< -o $@
+	$(CC) -x assembler-with-cpp $(CFLAGS) $(ASFLAGS) -c $< -o $@
 
 -include $(DEPS)
 

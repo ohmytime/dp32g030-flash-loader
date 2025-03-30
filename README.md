@@ -16,7 +16,7 @@ Create a folder:
 md "%USERPROFILE%\AppData\Roaming\SEGGER\JLinkDevices"
 md "%USERPROFILE%\AppData\Roaming\SEGGER\JLinkDevices\DualTachyon"
 md "%USERPROFILE%\AppData\Roaming\SEGGER\JLinkDevices\DualTachyon\DP32G030"
-copy Devices.xml "%USERPROFILE%\AppData\Roaming\SEGGER\JLinkDevices\DualTachyon\DP32G030\"
+copy Devices.xml ERROR: Algo error: Cannot find struct "FlashDevice""%USERPROFILE%\AppData\Roaming\SEGGER\JLinkDevices\DualTachyon\DP32G030\"
 copy dp32-fl.elf "%USERPROFILE%\AppData\Roaming\SEGGER\JLinkDevices\DualTachyon\DP32G030\"
 ```
 

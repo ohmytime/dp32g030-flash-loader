@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#if DP32
+
 
 #ifndef HARDWARE_DP32G030_FLASH_H
 #define HARDWARE_DP32G030_FLASH_H
@@ -163,3 +165,85 @@
 
 #endif
 
+#else
+
+
+#ifndef HARDWARE_KD32F328_FLASH_H
+#define HARDWARE_KD32F328_FLASH_H
+
+#if !defined(__ASSEMBLY__)
+#include <stdint.h>
+#endif
+
+// flash.h
+#define FLASH_BASE_ADDR           0x40022000U  // KD32F328 闪存控制器基地址
+#define FLASH_ACR_OFFSET          0x00U        // 访问控制寄存器偏移
+#define FLASH_KEYR_OFFSET         0x04U        // 解锁寄存器偏移
+#define FLASH_SR_OFFSET           0x0CU        // 状态寄存器偏移
+#define FLASH_CR_OFFSET           0x10U        // 控制寄存器偏移
+#define FLASH_AR_OFFSET           0x14U        // 地址寄存器偏移
+
+// 寄存器访问宏
+#define FLASH_ACR                 (*(volatile uint32_t*)(FLASH_BASE_ADDR + FLASH_ACR_OFFSET))
+#define FLASH_KEYR                (*(volatile uint32_t*)(FLASH_BASE_ADDR + FLASH_KEYR_OFFSET))
+#define FLASH_SR                  (*(volatile uint32_t*)(FLASH_BASE_ADDR + FLASH_SR_OFFSET))
+#define FLASH_CR                  (*(volatile uint32_t*)(FLASH_BASE_ADDR + FLASH_CR_OFFSET))
+#define FLASH_AR                  (*(volatile uint32_t*)(FLASH_BASE_ADDR + FLASH_AR_OFFSET))
+
+// 控制寄存器 (FLASH_CR) 位定义
+#define FLASH_CR_PG               (1 << 0)     // 编程模式使能
+#define FLASH_CR_PER              (1 << 1)     // 页擦除模式
+#define FLASH_CR_STRT             (1 << 6)     // 启动操作
+#define FLASH_CR_LOCK             (1 << 7)     // 寄存器锁定
+
+// 状态寄存器 (FLASH_SR) 位定义
+#define FLASH_SR_BSY             (1 << 0)     // 忙标志位
+#define FLASH_SR_PROG_BUF_EMPTY   (1 << 2)    // 编程缓冲区空标志
+#define FLASH_SR_EOP             (1 << 5)     // 操作完成标志
+
+#define FLASH_ACR_LATENCY_MASK    (0x7 << 0)  // 等待周期位掩码
+#define FLASH_ACR_PRFTEN          (1 << 4)    // 预取使能位
+
+#define FLASH_KEY1                0x45670123U
+#define FLASH_KEY2                0xCDEF89ABU
+
+#define FLASH_UNLOCK() \
+  do { \
+    FLASH_KEYR = FLASH_KEY1; \
+    FLASH_KEYR = FLASH_KEY2; \
+  } while(0)
+
+#define FLASH_LOCK()             (FLASH_CR |= FLASH_CR_LOCK)
+
+#define FLASH_LATENCY_MASK       0x00000007U
+#define FLASH_SET_LATENCY(n)     (FLASH_ACR = (FLASH_ACR & ~FLASH_LATENCY_MASK) | (n))
+
+
+#define FLASH_IS_BUSY()          (FLASH_SR & FLASH_SR_BSY)
+#define FLASH_WAIT_FINISH()      while (FLASH_IS_BUSY())
+#define FLASH_CLEAR_EOP_FLAG()   (FLASH_SR |= FLASH_SR_EOP)  // 清除完成标志
+
+
+#define FLASH_ERASE_PAGE(addr) \
+  do { \
+    FLASH_CR |= FLASH_CR_PER;     /* 页擦除模式 */ \
+    FLASH_AR = addr;              /* 设置擦除地址 */ \
+    FLASH_CR |= FLASH_CR_STRT;    /* 启动擦除 */ \
+    while (FLASH_SR & FLASH_SR_BSY); /* 等待完成 */ \
+    FLASH_CR &= ~FLASH_CR_PER;    /* 清除模式 */ \
+  } while(0)
+
+#define FLASH_PROGRAM_WORD(addr, data) \
+  do { \
+    FLASH_CR |= FLASH_CR_PG;       /* 编程模式使能 */ \
+    *((volatile uint32_t*)(addr)) = data; /* 写入数据 */ \
+    while (FLASH_SR & FLASH_SR_BSY); /* 等待完成 */ \
+    FLASH_CR &= ~FLASH_CR_PG;     /* 清除模式 */ \
+  } while(0)
+
+
+
+#endif
+
+
+#endif
